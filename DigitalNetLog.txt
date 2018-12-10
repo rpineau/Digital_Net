@@ -1,0 +1,63 @@
+[Wed Nov 14 12:31:58 2018] CDigitalNet Constructor Called.
+[Wed Nov 14 12:32:01 2018] CDigitalNet::Connect Called COM2
+[Wed Nov 14 12:32:01 2018] CDigitalNet::Connect connected to COM2
+[Wed Nov 14 12:32:01 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:02 2018] CDigitalNet::readResponse timeout
+[Wed Nov 14 12:32:02 2018] CDigitalNet::readResponse : 
+[Wed Nov 14 12:32:02 2018] CDigitalNet::DigitalNetCommand response ""
+[Wed Nov 14 12:32:02 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : ""
+[Wed Nov 14 12:32:02 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:02 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:02 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:02 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:03 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:03 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:03 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:03 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:03 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:03 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:04 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:04 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:04 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:04 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:04 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:04 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:05 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:05 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:05 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:05 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:05 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:05 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:06 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:06 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:06 2018] CDigitalNet::DigitalNetCommand Sending FMMODE
+[Wed Nov 14 12:32:06 2018] CDigitalNet::DigitalNetCommand response "!
+"
+[Wed Nov 14 12:32:06 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : "!
+"
+[Wed Nov 14 12:32:06 2018] CDigitalNet::DigitalNetCommand Sending P#
+[Wed Nov 14 12:32:07 2018] CDigitalNet::readResponse timeout
+[Wed Nov 14 12:32:07 2018] CDigitalNet::readResponse : 
+[Wed Nov 14 12:32:07 2018] CDigitalNet::DigitalNetCommand response ""
+[Wed Nov 14 12:32:07 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : ""
+[Wed Nov 14 12:32:07 2018] CDigitalNet::DigitalNetCommand Sending H#
+[Wed Nov 14 12:32:08 2018] CDigitalNet::readResponse timeout
+[Wed Nov 14 12:32:08 2018] CDigitalNet::readResponse : 
+[Wed Nov 14 12:32:08 2018] CDigitalNet::DigitalNetCommand response ""
+[Wed Nov 14 12:32:08 2018] CDigitalNet::DigitalNetCommand response copied to pszResult : ""
