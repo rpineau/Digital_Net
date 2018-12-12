@@ -60,19 +60,15 @@ public:
     int         getModel(char * pszModel,  const int &nStrMaxLen);
     int         getTemperature(double &dTemperature);
     int         getPosition(int &nPosition);
-    int         syncMotorPosition(int nPos);
     int         getPosLimit(void);
-    void        setPosLimit(int nLimit);
-    bool        isPosLimitEnabled(void);
-    void        enablePosLimit(bool bEnable);
-    int         centerFocuser(void);
+    int         calibrateFocuser(void);
     
 protected:
 
     int             DigitalNetCommand(const char *pszCmd, const unsigned int &nCmdLen, char *pszResult, const unsigned int &nResultLenght, const unsigned int &nResultMaxLen);
     int             readResponse(char *pszRespBuffer, const unsigned int &nResultLenght, const unsigned int &nBufferLen);
     int             parseFields(const char *pszIn, std::vector<std::string> &svFields, const char &cSeparator);
-
+    void            hexdump(const char* pszInputBuffer, unsigned char *pszOutputBuffer, const int &nInputBufferSize, const int &nOutpuBufferSize);
     int             setManualMode();
     int             setFreeMode();
 

@@ -38,8 +38,6 @@ X2Focuser::X2Focuser(const char* pszDisplayName,
 
     // Read in settings
     if (m_pIniUtil) {
-        m_DigitalNet.setPosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT, 0));
-        m_DigitalNet.enablePosLimit(m_pIniUtil->readInt(PARENT_KEY, POS_LIMIT_ENABLED, false));
     }
 	m_DigitalNet.SetSerxPointer(m_pSerX);
     m_DigitalNet.setSleeper(m_pSleeper);
@@ -227,16 +225,6 @@ int	X2Focuser::execModalSettingsDialog(void)
         dx->setEnabled("pushButton", false);
     }
 
-    // limit is done in software so it's always enabled.
-    dx->setEnabled("posLimit", true);
-    dx->setEnabled("limitEnable", true);
-    dx->setPropertyInt("posLimit", "value", m_DigitalNet.getPosLimit());
-    if(m_DigitalNet.isPosLimitEnabled())
-        dx->setChecked("limitEnable", true);
-    else
-        dx->setChecked("limitEnable", false);
-
-
 
     //Display the user interface
     mUiEnabled = true;
@@ -247,19 +235,6 @@ int	X2Focuser::execModalSettingsDialog(void)
     //Retreive values from the user interface
     if (bPressedOK) {
         nErr = SB_OK;
-        // get limit option
-        bLimitEnabled = dx->isChecked("limitEnable");
-        dx->propertyInt("posLimit", "value", nPosLimit);
-        if(bLimitEnabled && nPosLimit>0) { // a position limit of 0 doesn't make sense :)
-            printf("Setting pos limit to %d\n", nPosLimit);
-            m_DigitalNet.setPosLimit(nPosLimit);
-            m_DigitalNet.enablePosLimit(bLimitEnabled);
-        } else {
-            m_DigitalNet.enablePosLimit(false);
-        }
-        // save values to config
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT, nPosLimit);
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, POS_LIMIT_ENABLED, bLimitEnabled);
     }
     return nErr;
 }
@@ -271,10 +246,10 @@ void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 
     // new position
     if (!strcmp(pszEvent, "on_pushButton_clicked")) {
-        nErr = m_DigitalNet.centerFocuser();
+        nErr = m_DigitalNet.calibrateFocuser();
         if(nErr) {
-            snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error centering focuser : Error %d", nErr);
-            uiex->messageBox("Center Focuser", szErrorMessage);
+            snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error calibrating focuser : Error %d", nErr);
+            uiex->messageBox("Calibrate Focuser", szErrorMessage);
             return;
         }
     }

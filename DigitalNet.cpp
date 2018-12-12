@@ -54,7 +54,7 @@ CDigitalNet::CDigitalNet()
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
-	fprintf(Logfile, "[%s] CDigitalNet Constructor Called.\n", timestamp);
+	fprintf(Logfile, "[%s] [CDigitalNet] Constructor Called.\n", timestamp);
 	fflush(Logfile);
 #endif
 
@@ -80,7 +80,7 @@ int CDigitalNet::Connect(const char *pszPort)
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
-	fprintf(Logfile, "[%s] CDigitalNet::Connect Called %s\n", timestamp, pszPort);
+	fprintf(Logfile, "[%s] [CDigitalNet::Connect] Called %s\n", timestamp, pszPort);
 	fflush(Logfile);
 #endif
 
@@ -96,7 +96,7 @@ int CDigitalNet::Connect(const char *pszPort)
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
-	fprintf(Logfile, "[%s] CDigitalNet::Connect connected to %s\n", timestamp, pszPort);
+	fprintf(Logfile, "[%s] [CDigitalNet::Connect] connected to %s\n", timestamp, pszPort);
 	fflush(Logfile);
 #endif
 
@@ -177,7 +177,7 @@ int CDigitalNet::moveRelativeToPosision(int nSteps)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CDigitalNet::gotoPosition goto relative position  : %d\n", timestamp, nSteps);
+    fprintf(Logfile, "[%s] [CDigitalNet::gotoPosition] goto relative position  : %d\n", timestamp, nSteps);
     fflush(Logfile);
 #endif
 
@@ -245,7 +245,7 @@ int CDigitalNet::getFirmwareVersion(char *pszVersion, const int &nStrMaxLen)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CDigitalNet::getFirmwareVersion m_szFirmwareVersion : %s\n", timestamp, m_szFirmwareVersion);
+    fprintf(Logfile, "[%s] [CDigitalNet::getFirmwareVersion] m_szFirmwareVersion : %s\n", timestamp, m_szFirmwareVersion);
     fflush(Logfile);
 #endif
 
@@ -276,7 +276,7 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CDigitalNet::getModel mode = %d\n", timestamp, nModel);
+    fprintf(Logfile, "[%s] [CDigitalNet::getModel] model = %d\n", timestamp, nModel);
     fflush(Logfile);
 #endif
 
@@ -337,14 +337,17 @@ int CDigitalNet::getPosition(int &nPosition)
 
 
     nErr = DigitalNetCommand("FPOSRO", strlen("FPOSRO"), szResp, 7, SERIAL_BUFFER_SIZE);
-    if(nErr)
+    if(nErr) {
+        nPosition = m_nCurPos;
+        if (nErr == ERR_NORESPONSE)
+            nErr = DigitalNet_OK; // we had a imeout and we ignore it
         return nErr;
-
+    }
     // parse output to extract position value.
     nErr = parseFields(szResp, vFieldsData, '=');
-    if(nErr)
+    if(nErr) {
         return nErr;
-
+    }
     if(vFieldsData.size()>=2) {
         // convert response
         nPosition = atoi(vFieldsData[1].c_str());
@@ -353,40 +356,9 @@ int CDigitalNet::getPosition(int &nPosition)
     return nErr;
 }
 
-
-int CDigitalNet::syncMotorPosition(int nPos)
-{
-    int nErr = DigitalNet_OK;
-    char szCmd[SERIAL_BUFFER_SIZE];
-    char szResp[SERIAL_BUFFER_SIZE];
-
-	if(!m_bIsConnected)
-		return ERR_COMMNOLINK;
-
-    // m_nCurPos = nPos;
-    return nErr;
-}
-
-
-
 int CDigitalNet::getPosLimit()
 {
     return m_nPosLimit;
-}
-
-void CDigitalNet::setPosLimit(int nLimit)
-{
-    // m_nPosLimit = nLimit;
-}
-
-bool CDigitalNet::isPosLimitEnabled()
-{
-    return m_bPosLimitEnabled;
-}
-
-void CDigitalNet::enablePosLimit(bool bEnable)
-{
-    m_bPosLimitEnabled = bEnable;
 }
 
 #pragma mark - mode function
@@ -417,7 +389,7 @@ int CDigitalNet::setFreeMode()
 }
 
 
-int CDigitalNet::centerFocuser()
+int CDigitalNet::calibrateFocuser()
 {
     int nErr = DigitalNet_OK;
     char szResp[SERIAL_BUFFER_SIZE];
@@ -437,7 +409,19 @@ int CDigitalNet::readDeviceData()
 	nErr = DigitalNetCommand("FDMODE", strlen("FDMODE"), szResp, 43, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
-	memcpy(m_cDeviceData, szResp, 42);
+
+#ifdef DigitalNet_DEBUG
+    unsigned char cHexMessage[LOG_BUFFER_SIZE];
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    hexdump(szResp, cHexMessage, 42, LOG_BUFFER_SIZE);
+    fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
+    fflush(Logfile);
+
+#endif
+
+    memcpy(m_cDeviceData, szResp, 42);
 	return nErr;
 }
 
@@ -446,7 +430,7 @@ int CDigitalNet::writeDeviceData()
 	int nErr = DigitalNet_OK;
 	char szResp[SERIAL_BUFFER_SIZE];
 	char szCmd[SERIAL_BUFFER_SIZE];
-	
+
 	snprintf(szCmd, SERIAL_BUFFER_SIZE, "FNMODE");
 	memcpy(szCmd+6, m_cDeviceData+19, 23);
 	nErr = DigitalNetCommand(szCmd, 29, szResp, 1, SERIAL_BUFFER_SIZE);
@@ -455,8 +439,7 @@ int CDigitalNet::writeDeviceData()
 	if(!strstr(szResp, "D")) {
 		nErr = ERR_CMDFAILED;
 	}
-	
-	return nErr;
+    return nErr;
 }
 
 #pragma mark - read/write controller internal data
@@ -468,7 +451,19 @@ int CDigitalNet::readControllerData()
 	nErr = DigitalNetCommand("FEMODE", strlen("FEMODE"), szResp, 19, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
-	memcpy(m_cControllerData, szResp, 18);
+
+#ifdef DigitalNet_DEBUG
+    unsigned char cHexMessage[LOG_BUFFER_SIZE];
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    hexdump(szResp, cHexMessage, 18, LOG_BUFFER_SIZE);
+    fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
+    fflush(Logfile);
+
+#endif
+
+    memcpy(m_cControllerData, szResp, 18);
 	return nErr;
 }
 
@@ -622,4 +617,16 @@ int CDigitalNet::parseFields(const char *pszIn, std::vector<std::string> &svFiel
         nErr = ERR_BADFORMAT;
     }
     return nErr;
+}
+
+void CDigitalNet::hexdump(const char* pszInputBuffer, unsigned char *pszOutputBuffer, const int &nInputBufferSize, const int &nOutpuBufferSize)
+{
+    unsigned char *pszBuf = pszOutputBuffer;
+    int nIdx=0;
+
+    memset(pszOutputBuffer, 0, nOutpuBufferSize);
+    for(nIdx=0; nIdx < nInputBufferSize && pszBuf < (pszOutputBuffer + nOutpuBufferSize -3); nIdx++){
+        snprintf((char *)pszBuf,4,"%02X ", pszInputBuffer[nIdx]);
+        pszBuf+=3;
+    }
 }
