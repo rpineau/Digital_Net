@@ -28,10 +28,12 @@ CDigitalNet::CDigitalNet()
     m_nCurPos = 0;
     m_nTargetPos = 0;
     m_nPosLimit = 0;
-    m_bPosLimitEnabled = 0;
+    m_bPosLimitEnabled = false;
     m_bMoving = false;
-
-
+    memset(m_szFirmwareVersion, 0, SERIAL_BUFFER_SIZE);
+    memset(m_cDeviceData,0,42);
+    memset(m_cControllerData,0,18);
+    
 #ifdef DigitalNet_DEBUG
 #if defined(SB_WIN_BUILD)
     m_sLogfilePath = getenv("HOMEDRIVE");
@@ -69,6 +71,7 @@ CDigitalNet::~CDigitalNet()
 int CDigitalNet::Connect(const char *pszPort)
 {
     int nErr = DigitalNet_OK;
+    int nDummy;
 
     if(!m_pSerx)
         return ERR_COMMNOLINK;
@@ -104,7 +107,25 @@ int CDigitalNet::Connect(const char *pszPort)
         return nErr;
     }
 
-    // get firmware, position, ....
+
+    // get firmware
+    getFirmwareVersion(m_szFirmwareVersion, SERIAL_BUFFER_SIZE);
+    // get position, ....
+    getPosition(nDummy);
+
+    // read some of the data array from the controller
+    readDeviceData();
+    readControllerData();
+
+#ifdef DigitalNet_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CDigitalNet::Connect] firmware :  %s\n", timestamp, m_szFirmwareVersion);
+    fprintf(Logfile, "[%s] [CDigitalNet::Connect] position :  %d\n", timestamp, m_nCurPos);
+    fflush(Logfile);
+#endif
+
     return nErr;
 }
 
@@ -119,18 +140,17 @@ void CDigitalNet::Disconnect()
 #pragma mark - move commands
 int CDigitalNet::haltFocuser()
 {
-    int nErr;
-	char szCmd[SERIAL_BUFFER_SIZE];
+    int nErr = DigitalNet_OK;
     char szResp[SERIAL_BUFFER_SIZE];
-
+    
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
-	snprintf(szCmd, SERIAL_BUFFER_SIZE, "FI%05d", m_nCurPos); // goto to cur pos should stop.
-    nErr = DigitalNetCommand(szCmd, strlen(szCmd), szResp, 1, SERIAL_BUFFER_SIZE);
+
+    nErr = DigitalNetCommand("FI00000", strlen("FI00000"), szResp, 1, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
 
-    if(!strstr(szResp, "*")) {
+    if(strstr(szResp, "E")) {
         nErr = ERR_CMDFAILED;
     }
 
@@ -138,10 +158,9 @@ int CDigitalNet::haltFocuser()
 }
 
 
-
 int CDigitalNet::moveRelativeToPosision(int nSteps)
 {
-    int nErr;
+    int nErr = DigitalNet_OK;
     char szResp[SERIAL_BUFFER_SIZE];
     char szCmd[SERIAL_BUFFER_SIZE];
 
@@ -149,8 +168,8 @@ int CDigitalNet::moveRelativeToPosision(int nSteps)
 		return ERR_COMMNOLINK;
 
 
-    if(m_bPosLimitEnabled && m_nPosLimit< m_nCurPos + nSteps )
-        return ERR_LIMITSEXCEEDED;
+    //if(m_bPosLimitEnabled && m_nPosLimit< m_nCurPos + nSteps )
+    //    return ERR_LIMITSEXCEEDED;
 
     m_nTargetPos = m_nCurPos + nSteps;
 
@@ -163,17 +182,17 @@ int CDigitalNet::moveRelativeToPosision(int nSteps)
 #endif
 
     if(nSteps<0) {
-        snprintf(szCmd, SERIAL_BUFFER_SIZE, "FI%05d", nSteps);
+        snprintf(szCmd, SERIAL_BUFFER_SIZE, "FI%05d", abs(nSteps));
     }
     else {
-        snprintf(szCmd, SERIAL_BUFFER_SIZE, "FO%05d", nSteps);
+        snprintf(szCmd, SERIAL_BUFFER_SIZE, "FO%05d", abs(nSteps));
     }
 
-    nErr = DigitalNetCommand(szCmd, strlen(szCmd), szResp, 1, SERIAL_BUFFER_SIZE);
+    nErr = DigitalNetCommand(szCmd, (int)strlen(szCmd), szResp, 1, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
 
-    if(!strstr(szResp, "*")) {
+    if(strstr(szResp, "E")) {
         m_nTargetPos = m_nCurPos;
         nErr = ERR_CMDFAILED;
     }
@@ -203,7 +222,6 @@ int CDigitalNet::isGoToComplete(bool &bComplete)
 int CDigitalNet::getFirmwareVersion(char *pszVersion, const int &nStrMaxLen)
 {
     int nErr = DigitalNet_OK;
-    char szResp[SERIAL_BUFFER_SIZE];
 
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
@@ -211,24 +229,78 @@ int CDigitalNet::getFirmwareVersion(char *pszVersion, const int &nStrMaxLen)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    strncpy(pszVersion, "Don't know yet :)", nStrMaxLen);
-    return nErr;
+    if(strlen(m_szFirmwareVersion)) {
+        strncpy(pszVersion,m_szFirmwareVersion,nStrMaxLen);
+        return nErr;
+    }
 
-    nErr = DigitalNetCommand("FDMODE", strlen("FDMODE"), szResp, 43, SERIAL_BUFFER_SIZE);
+    nErr = readDeviceData();
     if(nErr)
         return nErr;
+
+	memset(pszVersion, 0, nStrMaxLen);
+    memcpy(pszVersion, m_cDeviceData+1, 3);
+    strncpy(m_szFirmwareVersion, pszVersion, SERIAL_BUFFER_SIZE);   // save firmware version so we don't need to re-read it
 #ifdef DigitalNet_DEBUG
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CDigitalNet::getFirmwareVersion szResp : %s\n", timestamp, szResp);
+    fprintf(Logfile, "[%s] CDigitalNet::getFirmwareVersion m_szFirmwareVersion : %s\n", timestamp, m_szFirmwareVersion);
     fflush(Logfile);
 #endif
 
-	memset(pszVersion, 0, nStrMaxLen);
-    memcpy(pszVersion, szResp+1, 3);
     return nErr;
 }
+
+int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
+{
+    int nErr = DigitalNet_OK;
+    int nModel = 0;
+
+    if(!m_bIsConnected)
+        return ERR_COMMNOLINK;
+
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    if(strlen(m_szModel)) {
+        strncpy(pszModel,m_szModel,nStrMaxLen);
+        return nErr;
+    }
+
+    nErr = readDeviceData();
+    if(nErr)
+        return nErr;
+    nModel = (m_cDeviceData[0] & 0x24) >> 4;
+#ifdef DigitalNet_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CDigitalNet::getModel mode = %d\n", timestamp, nModel);
+    fflush(Logfile);
+#endif
+
+    switch(nModel) {
+        case 0:
+            strncpy(pszModel,"1 cm",nStrMaxLen);
+            break;
+        case 1:
+            strncpy(pszModel,"2 cm",nStrMaxLen);
+            break;
+        case 2:
+            strncpy(pszModel,"4 cm",nStrMaxLen);
+            break;
+        case 3:
+            strncpy(pszModel,"6 cm",nStrMaxLen);
+            break;
+        default:
+            strncpy(pszModel,"Unknown",nStrMaxLen);
+            break;
+    }
+    strncpy(m_szModel, pszModel, SERIAL_BUFFER_SIZE);   // save firmware version so we don't need to re-read it
+    return nErr;
+}
+
 
 int CDigitalNet::getTemperature(double &dTemperature)
 {
@@ -240,7 +312,7 @@ int CDigitalNet::getTemperature(double &dTemperature)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    nErr = DigitalNetCommand("FTMPRO\n", strlen("FTMPRO\n"),  szResp, 7, SERIAL_BUFFER_SIZE);
+    nErr = DigitalNetCommand("FTMPRO", (int)strlen("FTMPRO"),  szResp, 7, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
 
@@ -264,13 +336,10 @@ int CDigitalNet::getPosition(int &nPosition)
 		return ERR_COMMNOLINK;
 
 
-    nErr = DigitalNetCommand("FPOSRO", strlen("FPOSRO"), szResp, 9, SERIAL_BUFFER_SIZE);
+    nErr = DigitalNetCommand("FPOSRO", strlen("FPOSRO"), szResp, 7, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
 
-    if(!strstr(szResp, "*")) {
-        nErr = ERR_CMDFAILED;
-    }
     // parse output to extract position value.
     nErr = parseFields(szResp, vFieldsData, '=');
     if(nErr)
@@ -307,7 +376,7 @@ int CDigitalNet::getPosLimit()
 
 void CDigitalNet::setPosLimit(int nLimit)
 {
-    m_nPosLimit = nLimit;
+    // m_nPosLimit = nLimit;
 }
 
 bool CDigitalNet::isPosLimitEnabled()
@@ -327,7 +396,7 @@ int CDigitalNet::setManualMode()
     char szResp[SERIAL_BUFFER_SIZE];
 
     nErr = DigitalNetCommand("FMMODE", strlen("FMMODE"), szResp, 1, SERIAL_BUFFER_SIZE);
-    if(!strstr(szResp, "!")) {
+    if(strstr(szResp, "E")) {
         nErr = ERR_CMDFAILED;
     }
 
@@ -359,16 +428,16 @@ int CDigitalNet::centerFocuser()
     return nErr;
 }
 
-#pragma mark - read/write controller/device internal data
+#pragma mark - read/write device internal data
 int CDigitalNet::readDeviceData()
 {
 	int nErr = DigitalNet_OK;
 	char szResp[SERIAL_BUFFER_SIZE];
 
-	nErr = DigitalNetCommand("FEMODE", strlen("FEMODE"), szResp, 19, SERIAL_BUFFER_SIZE);
+	nErr = DigitalNetCommand("FDMODE", strlen("FDMODE"), szResp, 43, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
-	memcpy(m_cControllerData, szResp, 18);
+	memcpy(m_cDeviceData, szResp, 42);
 	return nErr;
 }
 
@@ -379,8 +448,8 @@ int CDigitalNet::writeDeviceData()
 	char szCmd[SERIAL_BUFFER_SIZE];
 	
 	snprintf(szCmd, SERIAL_BUFFER_SIZE, "FNMODE");
-	memcpy(szCmd+6, m_cDeviceData+15, 23);
-	nErr = DigitalNetCommand(szCmd, 11, szResp, 1, SERIAL_BUFFER_SIZE);
+	memcpy(szCmd+6, m_cDeviceData+19, 23);
+	nErr = DigitalNetCommand(szCmd, 29, szResp, 1, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
 	if(!strstr(szResp, "D")) {
@@ -390,12 +459,13 @@ int CDigitalNet::writeDeviceData()
 	return nErr;
 }
 
+#pragma mark - read/write controller internal data
 int CDigitalNet::readControllerData()
 {
 	int nErr = DigitalNet_OK;
 	char szResp[SERIAL_BUFFER_SIZE];
 	
-	nErr = DigitalNetCommand("FDMODE", strlen("FDMODE"), szResp, 43, SERIAL_BUFFER_SIZE);
+	nErr = DigitalNetCommand("FEMODE", strlen("FEMODE"), szResp, 19, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
 	memcpy(m_cControllerData, szResp, 18);
@@ -493,28 +563,14 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
 	memset(pszRespBuffer, 0, (size_t) nBufferLen);
     pszBufPtr = pszRespBuffer;
 
-#ifdef DigitalNet_DEBUG
-	ltime = time(NULL);
-	timestamp = asctime(localtime(&ltime));
-	timestamp[strlen(timestamp) - 1] = 0;
-	fprintf(Logfile, "[%s] [CDigitalNet::readResponse] reading response, starting read loop\n", timestamp);
-	fflush(Logfile);
-#endif
     do {
         nErr = m_pSerx->readFile(pszBufPtr, 1, ulBytesRead, MAX_TIMEOUT);
-#ifdef DigitalNet_DEBUG
-        ltime = time(NULL);
-        timestamp = asctime(localtime(&ltime));
-        timestamp[strlen(timestamp) - 1] = 0;
-        fprintf(Logfile, "[%s] [CDigitalNet::readResponse] data received\n", timestamp);
-        fflush(Logfile);
-#endif
         if(nErr) {
 #ifdef DigitalNet_DEBUG
             ltime = time(NULL);
             timestamp = asctime(localtime(&ltime));
             timestamp[strlen(timestamp) - 1] = 0;
-            fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ERRO READIN response : %d\n", timestamp, nErr);
+            fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ERRO READING response : %d\n", timestamp, nErr);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulBytesRead : %lu\n", timestamp, ulBytesRead);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer : %s\n", timestamp, pszRespBuffer);
             fflush(Logfile);
@@ -522,12 +578,12 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
             return nErr;
         }
 #ifdef DigitalNet_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulBytesRead : %lu\n", timestamp, ulBytesRead);
-		fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer : %s\n", timestamp, pszRespBuffer);
-		fflush(Logfile);
+               ltime = time(NULL);
+               timestamp = asctime(localtime(&ltime));
+               timestamp[strlen(timestamp) - 1] = 0;
+               fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulBytesRead : %lu\n", timestamp, ulBytesRead);
+               fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer : %s\n", timestamp, pszRespBuffer);
+               fflush(Logfile);
 #endif
 
         if (ulBytesRead !=1) {// timeout

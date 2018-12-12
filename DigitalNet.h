@@ -29,6 +29,8 @@
 #define MAX_TIMEOUT 1000
 #define LOG_BUFFER_SIZE 256
 
+#define COMMAND_DELAY   500
+
 enum DigitalNet_Errors    {DigitalNet_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DigitalNet_BAD_CMD_RESPONSE, COMMAND_FAILED};
 enum MotorDir       {NORMAL = 0 , REVERSE};
 enum MotorStatus    {IDLE = 0, MOVING};
@@ -55,6 +57,7 @@ public:
 
     // getter and setter
     int         getFirmwareVersion(char *pszVersion, const int &nStrMaxLen);
+    int         getModel(char * pszModel,  const int &nStrMaxLen);
     int         getTemperature(double &dTemperature);
     int         getPosition(int &nPosition);
     int         syncMotorPosition(int nPos);
@@ -87,6 +90,7 @@ protected:
 
     bool            m_bIsConnected;
     char            m_szFirmwareVersion[SERIAL_BUFFER_SIZE];
+    char            m_szModel[SERIAL_BUFFER_SIZE];
     char            m_szLogBuffer[LOG_BUFFER_SIZE];
 
     int             m_nCurPos;

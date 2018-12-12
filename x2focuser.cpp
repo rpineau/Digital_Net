@@ -109,7 +109,19 @@ double X2Focuser::driverInfoVersion(void) const
 
 void X2Focuser::deviceInfoNameShort(BasicStringInterface& str) const
 {
-    str="DigitalNet";
+    if(!m_bLinked) {
+        str="NA";
+    }
+    else {
+        X2Focuser* pMe = (X2Focuser*)this;
+        X2MutexLocker ml(pMe->GetMutex());
+
+        // get firmware version
+        char cModel[SERIAL_BUFFER_SIZE];
+        pMe->m_DigitalNet.getModel(cModel, SERIAL_BUFFER_SIZE);
+        str = cModel;
+
+    }
 }
 
 void X2Focuser::deviceInfoNameLong(BasicStringInterface& str) const
@@ -208,8 +220,6 @@ int	X2Focuser::execModalSettingsDialog(void)
     X2MutexLocker ml(GetMutex());
 	// set controls values
     if(m_bLinked) {
-        if(nErr)
-            return nErr;
         dx->setEnabled("pushButton", true);
     }
     else {
@@ -297,12 +307,12 @@ int	X2Focuser::focMaximumLimit(int& nPosLimit)
 {
 
 	X2MutexLocker ml(GetMutex());
-    if(m_DigitalNet.isPosLimitEnabled()) {
-        nPosLimit = m_DigitalNet.getPosLimit();
-    }
-	else {
-		nPosLimit = 100000;
-	}
+//    if(m_DigitalNet.isPosLimitEnabled()) {
+//        nPosLimit = m_DigitalNet.getPosLimit();
+//    }
+//	else {
+		nPosLimit = 200000;
+//	}
 
 	return SB_OK;
 }
@@ -355,7 +365,7 @@ int	X2Focuser::endFocGoto(void)
 
 int X2Focuser::amountCountFocGoto(void) const
 {
-	return 3;
+	return 8;
 }
 
 int	X2Focuser::amountNameFromIndexFocGoto(const int& nZeroBasedIndex, BasicStringInterface& strDisplayName, int& nAmount)
@@ -363,9 +373,14 @@ int	X2Focuser::amountNameFromIndexFocGoto(const int& nZeroBasedIndex, BasicStrin
 	switch (nZeroBasedIndex)
 	{
 		default:
-		case 0: strDisplayName="10 steps"; nAmount=10;break;
-		case 1: strDisplayName="100 steps"; nAmount=100;break;
-		case 2: strDisplayName="1000 steps"; nAmount=1000;break;
+		case 0: strDisplayName="1 steps"; nAmount=1;break;
+		case 1: strDisplayName="5 steps"; nAmount=5;break;
+		case 2: strDisplayName="10 steps"; nAmount=10;break;
+        case 3: strDisplayName="20 steps"; nAmount=20;break;
+        case 4: strDisplayName="50 steps"; nAmount=50;break;
+        case 5: strDisplayName="100 steps"; nAmount=100;break;
+        case 6: strDisplayName="500 steps"; nAmount=500;break;
+        case 7: strDisplayName="1000 steps"; nAmount=1000;break;
 	}
 	return SB_OK;
 }
