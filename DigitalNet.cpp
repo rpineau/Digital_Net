@@ -153,6 +153,8 @@ int CDigitalNet::haltFocuser()
     if(strstr(szResp, "E")) {
         nErr = ERR_CMDFAILED;
     }
+    // if we were doing a goto let's reset target position to current position
+    getPosition(m_nTargetPos);
 
     return nErr;
 }
@@ -168,7 +170,7 @@ int CDigitalNet::moveRelativeToPosision(int nSteps)
 		return ERR_COMMNOLINK;
 
 
-    //if(m_bPosLimitEnabled && m_nPosLimit< m_nCurPos + nSteps )
+    //if(m_nPosLimit < m_nCurPos + nSteps )
     //    return ERR_LIMITSEXCEEDED;
 
     m_nTargetPos = m_nCurPos + nSteps;
