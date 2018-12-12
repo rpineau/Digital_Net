@@ -28,8 +28,8 @@ CDigitalNet::CDigitalNet()
     m_nCurPos = 0;
     m_nTargetPos = 0;
     m_nPosLimit = 0;
-    m_bPosLimitEnabled = false;
-    m_bMoving = false;
+    m_bAborted = false;
+
     memset(m_szFirmwareVersion, 0, SERIAL_BUFFER_SIZE);
     memset(m_cDeviceData,0,42);
     memset(m_cControllerData,0,18);
@@ -146,6 +146,8 @@ int CDigitalNet::haltFocuser()
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
+    m_bAborted = true;
+
     nErr = DigitalNetCommand("FI00000", strlen("FI00000"), szResp, 1, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
@@ -174,6 +176,7 @@ int CDigitalNet::moveRelativeToPosision(int nSteps)
     //    return ERR_LIMITSEXCEEDED;
 
     m_nTargetPos = m_nCurPos + nSteps;
+    m_bAborted = false;
 
 #ifdef DigitalNet_DEBUG
     ltime = time(NULL);
@@ -210,7 +213,16 @@ int CDigitalNet::isGoToComplete(bool &bComplete)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    getPosition(m_nCurPos);
+    if(m_bAborted) {
+        bComplete = true;
+        m_nTargetPos = m_nCurPos;
+        return nErr;
+    }
+
+    nErr = getPosition(m_nCurPos);
+    if(nErr)
+        return nErr;
+
     if(m_nCurPos == m_nTargetPos)
         bComplete = true;
     else

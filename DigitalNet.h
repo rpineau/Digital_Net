@@ -92,8 +92,7 @@ protected:
     int             m_nCurPos;
     int             m_nTargetPos;
     int             m_nPosLimit;
-    bool            m_bPosLimitEnabled;
-    bool            m_bMoving;
+    bool            m_bAborted;
 
 #ifdef DigitalNet_DEBUG
     std::string m_sLogfilePath;
