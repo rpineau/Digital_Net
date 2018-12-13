@@ -70,45 +70,6 @@
       <property name="title">
        <string>Motor Settings</string>
       </property>
-      <widget class="QLabel" name="label_4">
-       <property name="geometry">
-        <rect>
-         <x>16</x>
-         <y>60</y>
-         <width>91</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Limit Position :</string>
-       </property>
-      </widget>
-      <widget class="QCheckBox" name="limitEnable">
-       <property name="geometry">
-        <rect>
-         <x>200</x>
-         <y>60</y>
-         <width>43</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>On</string>
-       </property>
-      </widget>
-      <widget class="QSpinBox" name="posLimit">
-       <property name="geometry">
-        <rect>
-         <x>120</x>
-         <y>60</y>
-         <width>64</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="maximum">
-        <number>999999</number>
-       </property>
-      </widget>
       <widget class="QPushButton" name="pushButton">
        <property name="geometry">
         <rect>
@@ -119,7 +80,7 @@
         </rect>
        </property>
        <property name="text">
-        <string>Center focuser</string>
+        <string>Calibrate focuser</string>
        </property>
       </widget>
      </widget>

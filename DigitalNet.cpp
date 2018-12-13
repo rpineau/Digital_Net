@@ -86,7 +86,7 @@ int CDigitalNet::Connect(const char *pszPort)
 
     m_bIsConnected = true;
     // 19200 8N2
-    nErr = m_pSerx->open(pszPort, 19200, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1 -STOPBITS 2");
+    nErr = m_pSerx->open(pszPort, CONNECTION_SPEED, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1 -STOPBITS 2");
     if(nErr) {
             m_bIsConnected = false;
             return nErr;
@@ -420,7 +420,7 @@ int CDigitalNet::readDeviceData()
 	int nErr = DigitalNet_OK;
 	char szResp[SERIAL_BUFFER_SIZE];
 
-	nErr = DigitalNetCommand("FDMODE", strlen("FDMODE"), szResp, 43, SERIAL_BUFFER_SIZE);
+	nErr = DigitalNetCommand("FDMODE", strlen("FDMODE"), szResp, 39, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
 
@@ -429,13 +429,13 @@ int CDigitalNet::readDeviceData()
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    hexdump(szResp, cHexMessage, 42, LOG_BUFFER_SIZE);
+    hexdump(szResp, cHexMessage, 38, LOG_BUFFER_SIZE);
     fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
     fflush(Logfile);
 
 #endif
 
-    memcpy(m_cDeviceData, szResp, 42);
+    memcpy(m_cDeviceData, szResp, 38);
 	return nErr;
 }
 
@@ -446,8 +446,8 @@ int CDigitalNet::writeDeviceData()
 	char szCmd[SERIAL_BUFFER_SIZE];
 
 	snprintf(szCmd, SERIAL_BUFFER_SIZE, "FNMODE");
-	memcpy(szCmd+6, m_cDeviceData+19, 23);
-	nErr = DigitalNetCommand(szCmd, 29, szResp, 1, SERIAL_BUFFER_SIZE);
+	memcpy(szCmd+6, m_cDeviceData+19, 19);
+	nErr = DigitalNetCommand(szCmd, 25, szResp, 1, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
 	if(!strstr(szResp, "D")) {
@@ -510,6 +510,9 @@ int CDigitalNet::DigitalNetCommand(const char *pszszCmd, const unsigned int &nCm
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
+    if(nResultLenght>nResultMaxLen)
+        return ERR_MEMORY;
+
     m_pSerx->purgeTxRx();
 #ifdef DigitalNet_DEBUG
 	ltime = time(NULL);
@@ -539,7 +542,8 @@ int CDigitalNet::DigitalNetCommand(const char *pszszCmd, const unsigned int &nCm
 		fflush(Logfile);
 #endif
         // printf("Got response : %s\n",resp);
-        strncpy(pszResult, szResp, nResultMaxLen);
+        memset(pszResult, 0, nResultMaxLen);
+        memcpy(pszResult,szResp,nResultLenght);
 #ifdef DigitalNet_DEBUG
 		ltime = time(NULL);
 		timestamp = asctime(localtime(&ltime));
@@ -562,6 +566,7 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
 		return ERR_COMMNOLINK;
 
 #ifdef DigitalNet_DEBUG
+    unsigned char cHexMessage[LOG_BUFFER_SIZE];
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
@@ -582,6 +587,8 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ERRO READING response : %d\n", timestamp, nErr);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulBytesRead : %lu\n", timestamp, ulBytesRead);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer : %s\n", timestamp, pszRespBuffer);
+            hexdump(pszRespBuffer, cHexMessage, int(ulTotalBytesRead + ulBytesRead), LOG_BUFFER_SIZE);
+            fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer [hex] : %s\n", timestamp, cHexMessage);
             fflush(Logfile);
 #endif
             return nErr;

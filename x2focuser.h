@@ -120,14 +120,14 @@ public:
     virtual int                                 focTemperature(double &dTemperature);
 
     //SerialPortParams2Interface
-    virtual void                                portName(BasicStringInterface& str) const			;
-    virtual void                                setPortName(const char* pszPort)						;
-    virtual unsigned int                        baudRate() const			{return 9600;};
+    virtual void                                portName(BasicStringInterface& str) const;
+    virtual void                                setPortName(const char* pszPort);
+    virtual unsigned int                        baudRate() const			{return CONNECTION_SPEED;};
     virtual void                                setBaudRate(unsigned int)	{};
     virtual bool                                isBaudRateFixed() const		{return true;}
 
     virtual SerXInterface::Parity               parity() const				{return SerXInterface::B_NOPARITY;}
-    virtual void                                setParity(const SerXInterface::Parity& parity){parity;};
+    virtual void                                setParity(const SerXInterface::Parity& parity){};
     virtual bool                                isParityFixed() const		{return true;}
 
 

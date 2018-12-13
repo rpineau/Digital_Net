@@ -30,6 +30,7 @@
 #define LOG_BUFFER_SIZE 256
 
 #define COMMAND_DELAY   500
+#define CONNECTION_SPEED    19200
 
 enum DigitalNet_Errors    {DigitalNet_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DigitalNet_BAD_CMD_RESPONSE, COMMAND_FAILED};
 enum MotorDir       {NORMAL = 0 , REVERSE};
