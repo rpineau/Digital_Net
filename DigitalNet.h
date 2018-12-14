@@ -69,7 +69,7 @@ protected:
     int             DigitalNetCommand(const char *pszCmd, const unsigned int &nCmdLen, char *pszResult, const unsigned int &nResultLenght, const unsigned int &nResultMaxLen);
     int             readResponse(char *pszRespBuffer, const unsigned int &nResultLenght, const unsigned int &nBufferLen);
     int             parseFields(const char *pszIn, std::vector<std::string> &svFields, const char &cSeparator);
-    void            hexdump(const char* pszInputBuffer, unsigned char *pszOutputBuffer, const int &nInputBufferSize, const int &nOutpuBufferSize);
+    void            hexdump(const unsigned char* pszInputBuffer, unsigned char *pszOutputBuffer, const int &nInputBufferSize, const int &nOutpuBufferSize);
     int             setManualMode();
     int             setFreeMode();
 

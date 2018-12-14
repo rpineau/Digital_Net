@@ -107,19 +107,8 @@ double X2Focuser::driverInfoVersion(void) const
 
 void X2Focuser::deviceInfoNameShort(BasicStringInterface& str) const
 {
-    if(!m_bLinked) {
-        str="NA";
-    }
-    else {
-        X2Focuser* pMe = (X2Focuser*)this;
-        X2MutexLocker ml(pMe->GetMutex());
+	str="DigitalNet";
 
-        // get firmware version
-        char cModel[SERIAL_BUFFER_SIZE];
-        pMe->m_DigitalNet.getModel(cModel, SERIAL_BUFFER_SIZE);
-        str = cModel;
-
-    }
 }
 
 void X2Focuser::deviceInfoNameLong(BasicStringInterface& str) const
@@ -148,7 +137,18 @@ void X2Focuser::deviceInfoFirmwareVersion(BasicStringInterface& str)
 
 void X2Focuser::deviceInfoModel(BasicStringInterface& str)
 {
-    str="DigitalNet";
+
+	if(!m_bLinked) {
+		str="";
+	}
+	else {
+		X2MutexLocker ml(GetMutex());
+		
+		// get firmware version
+		char cModel[SERIAL_BUFFER_SIZE];
+		m_DigitalNet.getModel(cModel, SERIAL_BUFFER_SIZE);
+		str = cModel;
+	}
 }
 
 #pragma mark - LinkInterface

@@ -31,6 +31,7 @@ CDigitalNet::CDigitalNet()
     m_bAborted = false;
 
     memset(m_szFirmwareVersion, 0, SERIAL_BUFFER_SIZE);
+	memset(m_szModel, 0, SERIAL_BUFFER_SIZE);
     memset(m_cDeviceData,0,42);
     memset(m_cControllerData,0,18);
     
@@ -271,6 +272,7 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
     int nErr = DigitalNet_OK;
     int nModel = 0;
 
+	memset(pszModel, 0, nStrMaxLen);
     if(!m_bIsConnected)
         return ERR_COMMNOLINK;
 
@@ -326,7 +328,7 @@ int CDigitalNet::getTemperature(double &dTemperature)
 	if(!m_bIsConnected)
 		return ERR_COMMNOLINK;
 
-    nErr = DigitalNetCommand("FTMPRO", (int)strlen("FTMPRO"),  szResp, 7, SERIAL_BUFFER_SIZE);
+    nErr = DigitalNetCommand("FTMPRO", strlen("FTMPRO"),  szResp, 7, SERIAL_BUFFER_SIZE);
     if(nErr)
         return nErr;
 
@@ -408,7 +410,7 @@ int CDigitalNet::calibrateFocuser()
     int nErr = DigitalNet_OK;
     char szResp[SERIAL_BUFFER_SIZE];
 
-    nErr = DigitalNetCommand("FCENTR", strlen("FCENTR"), szResp, 6, SERIAL_BUFFER_SIZE);
+    nErr = DigitalNetCommand("FCENTR", strlen("FCENTR"), szResp, 5, SERIAL_BUFFER_SIZE);
     // ignore the response for now until I can debug this on actual hardware
     // as this might take a while to return a response.
     return nErr;
@@ -429,7 +431,7 @@ int CDigitalNet::readDeviceData()
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    hexdump(szResp, cHexMessage, 38, LOG_BUFFER_SIZE);
+    hexdump((unsigned char *)szResp, cHexMessage, 38, LOG_BUFFER_SIZE);
     fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
     fflush(Logfile);
 
@@ -471,7 +473,7 @@ int CDigitalNet::readControllerData()
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    hexdump(szResp, cHexMessage, 18, LOG_BUFFER_SIZE);
+    hexdump((unsigned char *)szResp, cHexMessage, 18, LOG_BUFFER_SIZE);
     fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
     fflush(Logfile);
 
@@ -587,7 +589,7 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ERRO READING response : %d\n", timestamp, nErr);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulBytesRead : %lu\n", timestamp, ulBytesRead);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer : %s\n", timestamp, pszRespBuffer);
-            hexdump(pszRespBuffer, cHexMessage, int(ulTotalBytesRead + ulBytesRead), LOG_BUFFER_SIZE);
+            hexdump((unsigned char *)pszRespBuffer, cHexMessage, int(ulTotalBytesRead + ulBytesRead), LOG_BUFFER_SIZE);
             fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer [hex] : %s\n", timestamp, cHexMessage);
             fflush(Logfile);
 #endif
@@ -640,7 +642,7 @@ int CDigitalNet::parseFields(const char *pszIn, std::vector<std::string> &svFiel
     return nErr;
 }
 
-void CDigitalNet::hexdump(const char* pszInputBuffer, unsigned char *pszOutputBuffer, const int &nInputBufferSize, const int &nOutpuBufferSize)
+void CDigitalNet::hexdump(const unsigned char* pszInputBuffer, unsigned char *pszOutputBuffer, const int &nInputBufferSize, const int &nOutpuBufferSize)
 {
     unsigned char *pszBuf = pszOutputBuffer;
     int nIdx=0;
