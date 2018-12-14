@@ -153,7 +153,7 @@ int CDigitalNet::haltFocuser()
     if(nErr)
         return nErr;
 
-    if(strstr(szResp, "E")) {
+    if(szResp[0] == 'E') {
         nErr = ERR_CMDFAILED;
     }
     // if we were doing a goto let's reset target position to current position
@@ -198,7 +198,7 @@ int CDigitalNet::moveRelativeToPosision(int nSteps)
     if(nErr)
         return nErr;
 
-    if(strstr(szResp, "E")) {
+    if(szResp[0] == 'E') {
         m_nTargetPos = m_nCurPos;
         nErr = ERR_CMDFAILED;
     }
@@ -270,8 +270,8 @@ int CDigitalNet::getFirmwareVersion(char *pszVersion, const int &nStrMaxLen)
 int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
 {
     int nErr = DigitalNet_OK;
-    int nModel = 0;
-
+    unsigned char nModel = 0;
+	int nDeviceID = 0;
 	memset(pszModel, 0, nStrMaxLen);
     if(!m_bIsConnected)
         return ERR_COMMNOLINK;
@@ -284,10 +284,14 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
         return nErr;
     }
 
-    nErr = readDeviceData();
+    nErr = readControllerData();
     if(nErr)
         return nErr;
-    nModel = (m_cDeviceData[0] & 0x24) >> 4;
+	
+	nDeviceID =m_cDeviceData[11];
+    nModel = m_cDeviceData[2+nDeviceID];
+	nModel &= 0x0F;
+	
 #ifdef DigitalNet_DEBUG
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
@@ -297,23 +301,23 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
 #endif
 
     switch(nModel) {
-        case 0:
+        case 1:
             strncpy(pszModel,"1 cm",nStrMaxLen);
             break;
-        case 1:
+        case 2:
             strncpy(pszModel,"2 cm",nStrMaxLen);
             break;
-        case 2:
+        case 3:
             strncpy(pszModel,"4 cm",nStrMaxLen);
             break;
-        case 3:
+        case 4:
             strncpy(pszModel,"6 cm",nStrMaxLen);
             break;
         default:
             strncpy(pszModel,"Unknown",nStrMaxLen);
             break;
     }
-    strncpy(m_szModel, pszModel, SERIAL_BUFFER_SIZE);   // save firmware version so we don't need to re-read it
+    strncpy(m_szModel, pszModel, SERIAL_BUFFER_SIZE);   // save nodel so we don't need to re-read it
     return nErr;
 }
 
@@ -384,7 +388,7 @@ int CDigitalNet::setManualMode()
     char szResp[SERIAL_BUFFER_SIZE];
 
     nErr = DigitalNetCommand("FMMODE", strlen("FMMODE"), szResp, 1, SERIAL_BUFFER_SIZE);
-    if(strstr(szResp, "E")) {
+    if(szResp[0] == 'E') {
         nErr = ERR_CMDFAILED;
     }
 
@@ -452,7 +456,7 @@ int CDigitalNet::writeDeviceData()
 	nErr = DigitalNetCommand(szCmd, 25, szResp, 1, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
-	if(!strstr(szResp, "D")) {
+	if(szResp[0] != 'D') {
 		nErr = ERR_CMDFAILED;
 	}
     return nErr;
@@ -494,7 +498,7 @@ int CDigitalNet::writeControllerData()
 	nErr = DigitalNetCommand(szCmd, 11, szResp, 1, SERIAL_BUFFER_SIZE);
 	if(nErr)
 		return nErr;
-	if(!strstr(szResp, "D")) {
+	if(szResp[0] != 'D') {
 		nErr = ERR_CMDFAILED;
 	}
 
@@ -517,10 +521,13 @@ int CDigitalNet::DigitalNetCommand(const char *pszszCmd, const unsigned int &nCm
 
     m_pSerx->purgeTxRx();
 #ifdef DigitalNet_DEBUG
+	unsigned char cHexMessage[LOG_BUFFER_SIZE];
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
 	fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] Sending %s\n", timestamp, pszszCmd);
+	hexdump((unsigned char *)pszszCmd, cHexMessage, nResultLenght, LOG_BUFFER_SIZE);
+	fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] Sending [hex] : %s\n", timestamp, cHexMessage);
 	fflush(Logfile);
 #endif
     nErr = m_pSerx->writeFile((void *)pszszCmd, nCmdLen, ulBytesWrite);
@@ -536,24 +543,19 @@ int CDigitalNet::DigitalNetCommand(const char *pszszCmd, const unsigned int &nCm
         if(nErr){
             return nErr;
         }
-#ifdef DigitalNet_DEBUG
-		ltime = time(NULL);
-		timestamp = asctime(localtime(&ltime));
-		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] response \"%s\"\n", timestamp, szResp);
-		fflush(Logfile);
-#endif
-        // printf("Got response : %s\n",resp);
         memset(pszResult, 0, nResultMaxLen);
         memcpy(pszResult,szResp,nResultLenght);
 #ifdef DigitalNet_DEBUG
 		ltime = time(NULL);
 		timestamp = asctime(localtime(&ltime));
 		timestamp[strlen(timestamp) - 1] = 0;
-		fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] response copied to pszResult : \"%s\"\n", timestamp, pszResult);
+		fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] pszResult \"%s\"\n", timestamp, pszResult);
+		hexdump((unsigned char *)pszResult, cHexMessage, nResultLenght, LOG_BUFFER_SIZE);
+		fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] pszResult [hex] : %s\n", timestamp, cHexMessage);
 		fflush(Logfile);
 #endif
-    }
+
+	}
     return nErr;
 }
 
@@ -595,16 +597,8 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
 #endif
             return nErr;
         }
-#ifdef DigitalNet_DEBUG
-               ltime = time(NULL);
-               timestamp = asctime(localtime(&ltime));
-               timestamp[strlen(timestamp) - 1] = 0;
-               fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulBytesRead : %lu\n", timestamp, ulBytesRead);
-               fprintf(Logfile, "[%s] [CDigitalNet::readResponse] pszRespBuffer : %s\n", timestamp, pszRespBuffer);
-               fflush(Logfile);
-#endif
 
-        if (ulBytesRead !=1) {// timeout
+		if (ulBytesRead !=1) {// timeout
 #ifdef DigitalNet_DEBUG
 			ltime = time(NULL);
 			timestamp = asctime(localtime(&ltime));
@@ -619,6 +613,14 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
         ulTotalBytesRead += ulBytesRead;
         pszBufPtr++;
     } while (ulTotalBytesRead < nResultLenght );
+
+#ifdef DigitalNet_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] [CDigitalNet::readResponse] ulTotalBytesRead : %lu\n", timestamp, ulTotalBytesRead);
+	fflush(Logfile);
+#endif
 
     return nErr;
 }

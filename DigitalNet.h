@@ -79,8 +79,8 @@ protected:
 	int				readControllerData();
 	int				writeControllerData();
 
-	char			m_cDeviceData[42];
-	char			m_cControllerData[18];
+	unsigned char	m_cDeviceData[42];
+	unsigned char	m_cControllerData[18];
 	
     SerXInterface   *m_pSerx;
     SleeperInterface    *m_pSleeper;
