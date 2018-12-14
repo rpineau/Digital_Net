@@ -115,8 +115,8 @@ int CDigitalNet::Connect(const char *pszPort)
     getPosition(nDummy);
 
     // read some of the data array from the controller
-    readDeviceData();
     readControllerData();
+    readDeviceData();
 
 #ifdef DigitalNet_DEBUG
     ltime = time(NULL);
@@ -288,7 +288,7 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
     if(nErr)
         return nErr;
 	
-	nDeviceID =m_cDeviceData[11];
+	nDeviceID = m_cDeviceData[14];
     nModel = m_cDeviceData[2+nDeviceID];
 	nModel &= 0x0F;
 	
