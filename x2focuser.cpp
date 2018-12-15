@@ -200,9 +200,6 @@ int	X2Focuser::execModalSettingsDialog(void)
     X2GUIInterface*					ui = uiutil.X2UI();
     X2GUIExchangeInterface*			dx = NULL;//Comes after ui is loaded
     bool bPressedOK = false;
-    bool bLimitEnabled = false;
-    int nPosition = 0;
-    int nPosLimit = 0;
 
     mUiEnabled = false;
 

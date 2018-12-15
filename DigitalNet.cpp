@@ -108,15 +108,8 @@ int CDigitalNet::Connect(const char *pszPort)
         return nErr;
     }
 
-
-    // get firmware
-    getFirmwareVersion(m_szFirmwareVersion, SERIAL_BUFFER_SIZE);
     // get position, ....
     getPosition(nDummy);
-
-    // read some of the data array from the controller
-    readControllerData();
-    readDeviceData();
 
 #ifdef DigitalNet_DEBUG
     ltime = time(NULL);
@@ -288,8 +281,8 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
     if(nErr)
         return nErr;
 	
-	nDeviceID = m_cDeviceData[14];
-    nModel = m_cDeviceData[2+nDeviceID];
+	nDeviceID = m_cControllerData[14];
+    nModel = m_cControllerData[2+nDeviceID];
 	nModel &= 0x0F;
 	
 #ifdef DigitalNet_DEBUG
@@ -436,7 +429,7 @@ int CDigitalNet::readDeviceData()
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
     hexdump((unsigned char *)szResp, cHexMessage, 38, LOG_BUFFER_SIZE);
-    fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
+    fprintf(Logfile, "[%s] [CDigitalNet::readDeviceData] szResp = %s\n", timestamp, cHexMessage);
     fflush(Logfile);
 
 #endif
@@ -478,7 +471,7 @@ int CDigitalNet::readControllerData()
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
     hexdump((unsigned char *)szResp, cHexMessage, 18, LOG_BUFFER_SIZE);
-    fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] szResp = %s\n", timestamp, cHexMessage);
+    fprintf(Logfile, "[%s] [CDigitalNet::readControllerData] szResp = %s\n", timestamp, cHexMessage);
     fflush(Logfile);
 
 #endif
@@ -526,7 +519,7 @@ int CDigitalNet::DigitalNetCommand(const char *pszszCmd, const unsigned int &nCm
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
 	fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] Sending %s\n", timestamp, pszszCmd);
-	hexdump((unsigned char *)pszszCmd, cHexMessage, nResultLenght, LOG_BUFFER_SIZE);
+	hexdump((unsigned char *)pszszCmd, cHexMessage, nCmdLen, LOG_BUFFER_SIZE);
 	fprintf(Logfile, "[%s] [CDigitalNet::DigitalNetCommand] Sending [hex] : %s\n", timestamp, cHexMessage);
 	fflush(Logfile);
 #endif
