@@ -335,7 +335,7 @@ int CDigitalNet::getTemperature(double &dTemperature)
 
     // convert string value to double
     if(vCelcius.size()>=2)  // T=12.34
-        dTemperature = atof(vCelcius[1].c_str());
+        dTemperature = std::stof(vCelcius[1]);
     return nErr;
 }
 
@@ -363,7 +363,7 @@ int CDigitalNet::getPosition(int &nPosition)
     }
     if(vFieldsData.size()>=2) {
         // convert response
-        nPosition = atoi(vFieldsData[1].c_str());
+        nPosition = std::stoi(vFieldsData[1]);
         m_nCurPos = nPosition;
     }
     return nErr;
@@ -412,6 +412,27 @@ int CDigitalNet::calibrateFocuser()
     // as this might take a while to return a response.
     return nErr;
 }
+
+
+int CDigitalNet::getBalckLash(int &nBackLash)
+{
+    int nErr = DigitalNet_OK;
+
+    readDeviceData();
+    nBackLash = int(m_cDeviceData[BACKLASH]) & 0x00ff;
+    return nErr;
+}
+
+int CDigitalNet::setBalckLash(const int &nBackLash)
+{
+    int nErr = DigitalNet_OK;
+
+    m_cDeviceData[BACKLASH] = (unsigned char)nBackLash;
+    nErr = writeDeviceData();
+
+    return nErr;
+}
+
 
 #pragma mark - read/write device internal data
 int CDigitalNet::readDeviceData()

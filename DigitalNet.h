@@ -32,6 +32,9 @@
 #define COMMAND_DELAY   500
 #define CONNECTION_SPEED    19200
 
+// device data fields
+#define BACKLASH 23
+
 enum DigitalNet_Errors    {DigitalNet_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DigitalNet_BAD_CMD_RESPONSE, COMMAND_FAILED};
 enum MotorDir       {NORMAL = 0 , REVERSE};
 enum MotorStatus    {IDLE = 0, MOVING};
@@ -63,7 +66,9 @@ public:
     int         getPosition(int &nPosition);
     int         getPosLimit(void);
     int         calibrateFocuser(void);
-    
+    int         getBalckLash(int &nBackLash);
+    int         setBalckLash(const int &nBackLash);
+
 protected:
 
     int             DigitalNetCommand(const char *pszCmd, const unsigned int &nCmdLen, char *pszResult, const unsigned int &nResultLenght, const unsigned int &nResultMaxLen);

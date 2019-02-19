@@ -200,6 +200,7 @@ int	X2Focuser::execModalSettingsDialog(void)
     X2GUIInterface*					ui = uiutil.X2UI();
     X2GUIExchangeInterface*			dx = NULL;//Comes after ui is loaded
     bool bPressedOK = false;
+    int nBackLash;
 
     mUiEnabled = false;
 
@@ -216,6 +217,8 @@ int	X2Focuser::execModalSettingsDialog(void)
 	// set controls values
     if(m_bLinked) {
         dx->setEnabled("pushButton", true);
+        m_DigitalNet.getBalckLash(nBackLash);
+        dx->setPropertyInt("backLash", "value", nBackLash);
     }
     else {
         // disable all controls
@@ -239,14 +242,23 @@ int	X2Focuser::execModalSettingsDialog(void)
 void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
     int nErr = SB_OK;
+    int nBackLash;
     char szErrorMessage[LOG_BUFFER_SIZE];
 
-    // new position
     if (!strcmp(pszEvent, "on_pushButton_clicked")) {
         nErr = m_DigitalNet.calibrateFocuser();
         if(nErr) {
             snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error calibrating focuser : Error %d", nErr);
             uiex->messageBox("Calibrate Focuser", szErrorMessage);
+            return;
+        }
+    }
+    else if (!strcmp(pszEvent, "on_pushButton_2_clicked")) {
+        uiex->propertyInt("backLash", "value", nBackLash);
+        nErr = m_DigitalNet.setBalckLash(nBackLash);
+        if(nErr) {
+            snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error setting new backlash value : Error %d", nErr);
+            uiex->messageBox("Set Backlash", szErrorMessage);
             return;
         }
     }
@@ -258,7 +270,6 @@ void X2Focuser::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 int	X2Focuser::focPosition(int& nPosition)
 {
     int nErr;
-
     if(!m_bLinked)
         return NOT_CONNECTED;
 
