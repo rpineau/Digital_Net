@@ -1,8 +1,8 @@
 //
-//  nexdome.cpp
-//  NexDome X2 plugin
+//  DigitalNet.h
+//  DigitalNet focuser X2 plugin
 //
-//  Created by Rodolphe Pineau on 6/11/2016.
+//  Created by Rodolphe Pineau on 2018/12/09.
 
 
 #include "DigitalNet.h"

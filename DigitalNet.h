@@ -1,9 +1,9 @@
 //
 //  DigitalNet.h
-//  NexDome
+//  DigitalNet focuser X2 plugin
 //
-//  Created by Rodolphe Pineau on 2017/05/30.
-//  NexDome X2 plugin
+//  Created by Rodolphe Pineau on 2018/12/09.
+
 
 #ifndef __DigitalNet__
 #define __DigitalNet__
