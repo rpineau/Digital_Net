@@ -86,7 +86,7 @@ int CDigitalNet::Connect(const char *pszPort)
 #endif
 
     m_bIsConnected = true;
-    // 19200 8N2
+
     nErr = m_pSerx->open(pszPort, CONNECTION_SPEED, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1 -STOPBITS 2");
     if(nErr) {
             m_bIsConnected = false;
@@ -281,8 +281,8 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
     if(nErr)
         return nErr;
 	
-	nDeviceID = m_cControllerData[14];
-    nModel = m_cControllerData[2+nDeviceID];
+	nDeviceID = m_cControllerData[DEVICE_ID];
+    nModel = m_cControllerData[DEVICE_PRESENT + nDeviceID];
 	nModel &= 0x0F;
 	
 #ifdef DigitalNet_DEBUG

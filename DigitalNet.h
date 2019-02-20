@@ -35,6 +35,10 @@
 // device data fields
 #define BACKLASH 23
 
+// controller data fields
+#define DEVICE_PRESENT 2
+#define DEVICE_ID 14
+
 enum DigitalNet_Errors    {DigitalNet_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DigitalNet_BAD_CMD_RESPONSE, COMMAND_FAILED};
 enum MotorDir       {NORMAL = 0 , REVERSE};
 enum MotorStatus    {IDLE = 0, MOVING};
