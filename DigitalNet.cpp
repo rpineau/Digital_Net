@@ -315,6 +315,7 @@ int CDigitalNet::getModel(char * pszModel,  const int &nStrMaxLen)
 }
 
 
+
 int CDigitalNet::getTemperature(double &dTemperature)
 {
     int nErr = DigitalNet_OK;
@@ -432,6 +433,46 @@ int CDigitalNet::setBalckLash(const int &nBackLash)
 
     return nErr;
 }
+
+int CDigitalNet::getBuzzerState(bool &bEnabled)
+{
+	int nErr = DigitalNet_OK;
+	
+	readControllerData();
+	bEnabled = bool((m_cControllerData[SATE_SET] & S_SET_BUZZER_MASK)>> S_SET_BUZZER_BIT);
+	return nErr;
+
+}
+
+int CDigitalNet::setBuzzerState(const bool &bEnabled)
+{
+	int nErr = DigitalNet_OK;
+	
+	readControllerData();
+#ifdef DigitalNet_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] [CDigitalNet::readDeviceData] before set m_cControllerData[SATE_SET] = %02X\n", timestamp, m_cControllerData[SATE_SET]);
+	fflush(Logfile);
+	
+#endif
+
+	m_cControllerData[SATE_SET] = bool(m_cControllerData[SATE_SET] | (bEnabled?1:0)<<S_SET_BUZZER_BIT);
+
+#ifdef DigitalNet_DEBUG
+	ltime = time(NULL);
+	timestamp = asctime(localtime(&ltime));
+	timestamp[strlen(timestamp) - 1] = 0;
+	fprintf(Logfile, "[%s] [CDigitalNet::readDeviceData] after set m_cControllerData[SATE_SET] = %02X\n", timestamp, m_cControllerData[SATE_SET]);
+	fflush(Logfile);
+	
+#endif
+
+	nErr = writeControllerData();
+	return nErr;
+}
+
 
 
 #pragma mark - read/write device internal data

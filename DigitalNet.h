@@ -39,6 +39,15 @@
 #define DEVICE_PRESENT 2
 #define DEVICE_ID 14
 
+#define SATE_SET	013
+#define S_SET_BUZZER_BIT	0x04
+#define S_SET_BUZZER_MASK	0xfb
+
+#define S_SET_TEMP_BIT	0x08
+#define S_SET_TEMP_MASK	0xf7
+
+
+
 enum DigitalNet_Errors    {DigitalNet_OK = 0, NOT_CONNECTED, ND_CANT_CONNECT, DigitalNet_BAD_CMD_RESPONSE, COMMAND_FAILED};
 enum MotorDir       {NORMAL = 0 , REVERSE};
 enum MotorStatus    {IDLE = 0, MOVING};
@@ -72,6 +81,8 @@ public:
     int         calibrateFocuser(void);
     int         getBalckLash(int &nBackLash);
     int         setBalckLash(const int &nBackLash);
+	int         getBuzzerState(bool &bEnabled);
+	int         setBuzzerState(const bool &bEnabled);
 
 protected:
 

@@ -201,7 +201,8 @@ int	X2Focuser::execModalSettingsDialog(void)
     X2GUIExchangeInterface*			dx = NULL;//Comes after ui is loaded
     bool bPressedOK = false;
     int nBackLash;
-
+	bool bBuzzerEnabled;
+	
     mUiEnabled = false;
 
     if (NULL == ui)
@@ -217,12 +218,21 @@ int	X2Focuser::execModalSettingsDialog(void)
 	// set controls values
     if(m_bLinked) {
         dx->setEnabled("pushButton", true);
-        m_DigitalNet.getBalckLash(nBackLash);
+		
+		dx->setEnabled("pushButton_2", true);
+m_DigitalNet.getBalckLash(nBackLash);
         dx->setPropertyInt("backLash", "value", nBackLash);
-    }
+		
+		dx->setEnabled("enableBuzzer", true);
+		m_DigitalNet.getBuzzerState(bBuzzerEnabled);
+		dx->setChecked("enableBuzzer", bBuzzerEnabled);
+
+	}
     else {
         // disable all controls
         dx->setEnabled("pushButton", false);
+		dx->setEnabled("pushButton_2", false);
+		dx->setEnabled("enableBuzzer", false);
     }
 
 
@@ -235,6 +245,8 @@ int	X2Focuser::execModalSettingsDialog(void)
     //Retreive values from the user interface
     if (bPressedOK) {
         nErr = SB_OK;
+		bBuzzerEnabled = dx->isChecked("enableBuzzer");
+		nErr = m_DigitalNet.setBuzzerState(bBuzzerEnabled);
     }
     return nErr;
 }
