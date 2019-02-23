@@ -108,8 +108,11 @@ int CDigitalNet::Connect(const char *pszPort)
         return nErr;
     }
 
+	// device is slow to start
+	m_pSleeper->sleep(500);
     // get position, ....
     getPosition(nDummy);
+	m_pSleeper->sleep(500);
 
 #ifdef DigitalNet_DEBUG
     ltime = time(NULL);
