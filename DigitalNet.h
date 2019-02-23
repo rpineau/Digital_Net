@@ -39,8 +39,8 @@
 #define DEVICE_PRESENT 2
 #define DEVICE_ID 14
 
-#define SATE_SET	013
-#define S_SET_BUZZER_BIT	0x04
+#define SATE_SET 13
+#define S_SET_BUZZER_BIT	0x02	// bit 2 in the array
 #define S_SET_BUZZER_MASK	0xfb
 
 #define S_SET_TEMP_BIT	0x08

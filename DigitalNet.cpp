@@ -461,7 +461,7 @@ int CDigitalNet::setBuzzerState(const bool &bEnabled)
 	
 #endif
 
-	m_cControllerData[SATE_SET] = bool(m_cControllerData[SATE_SET] | (bEnabled?1:0)<<S_SET_BUZZER_BIT);
+	m_cControllerData[SATE_SET] = (m_cControllerData[SATE_SET] & S_SET_BUZZER_MASK) | (bEnabled?1:0)<<S_SET_BUZZER_BIT;
 
 #ifdef DigitalNet_DEBUG
 	ltime = time(NULL);
@@ -632,7 +632,7 @@ int CDigitalNet::readResponse(char *pszRespBuffer, const unsigned int &nResultLe
 	ltime = time(NULL);
 	timestamp = asctime(localtime(&ltime));
 	timestamp[strlen(timestamp) - 1] = 0;
-	fprintf(Logfile, "[%s] [CDigitalNet::readResponse] reading response, expeted response length : %d\n", timestamp, nResultLenght);
+	fprintf(Logfile, "[%s] [CDigitalNet::readResponse] reading response, expected response length : %d\n", timestamp, nResultLenght);
 	fflush(Logfile);
 #endif
 
