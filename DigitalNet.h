@@ -23,7 +23,7 @@
 #include "../../licensedinterfaces/loggerinterface.h"
 #include "../../licensedinterfaces/sleeperinterface.h"
 
-#define DigitalNet_DEBUG 2
+// #define DigitalNet_DEBUG 2
 
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 1000
