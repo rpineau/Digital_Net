@@ -4,7 +4,7 @@ PACKAGE_NAME="DigitalNet_X2.pkg"
 BUNDLE_NAME="org.rti-zone.DigitalNetX2"
 
 if [ ! -z "$app_id_signature" ]; then
-    codesign -s "$app_id_signature" ../build/Release/libDigitalNet.dylib
+    codesign -f -s "$app_id_signature" --verbose ../build/Release/libDigitalNet.dylib
 fi
 
 mkdir -p ROOT/tmp/DigitalNet_X2/
