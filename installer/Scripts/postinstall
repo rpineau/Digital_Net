@@ -30,8 +30,12 @@ echo "Installing in $PLUGINS_DIR/FocuserPlugIns/"
 
 cp "/tmp/DigitalNet_X2/focuserlist DigitalNet.txt" "$TheSkyX_Path/Resources/Common/Miscellaneous Files/"
 if [ "$?" -ne "0" ]; then exit 1; fi
+
+rm -f "$PLUGINS_DIR/FocuserPlugIns/DigitalNet.ui"
 cp "/tmp/DigitalNet_X2/DigitalNet.ui" "$PLUGINS_DIR/FocuserPlugIns/"
 if [ "$?" -ne "0" ]; then exit 1; fi
+
+rm -f "$PLUGINS_DIR/FocuserPlugIns/libDigitalNet.dylib"
 cp "/tmp/DigitalNet_X2/libDigitalNet.dylib" "$PLUGINS_DIR/FocuserPlugIns/"
 if [ "$?" -ne "0" ]; then exit 1; fi
 
